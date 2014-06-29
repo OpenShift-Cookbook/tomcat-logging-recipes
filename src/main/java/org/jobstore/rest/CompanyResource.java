@@ -4,6 +4,8 @@ import java.util.List;
 
 import org.jobstore.domain.Company;
 import org.jobstore.repository.CompanyRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -21,20 +23,27 @@ public class CompanyResource {
 
 	@Autowired
 	private CompanyRepository companyRepository;
+	
+	private Logger logger = LoggerFactory.getLogger(CompanyResource.class);
 
 	@RequestMapping(method = RequestMethod.POST, consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
 	public ResponseEntity<Company> createNewCompany(@RequestBody Company company) {
+		logger.debug("inside createNewCompany().. creating new company {}" , company);
 		Company existingCompany = companyRepository.findByName(company.getName());
 		if(existingCompany != null){
+			logger.debug("Company with name {} already exists : {}" , company.getName(), existingCompany);
 			return new ResponseEntity<>(HttpStatus.NOT_ACCEPTABLE);
 		}
 		company = companyRepository.save(company);
+		logger.info("Created new company {}" , company);
 		return new ResponseEntity<>(company,HttpStatus.CREATED);
 	}
 	
 	@RequestMapping(method=RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
 	public @ResponseBody List<Company> showAll(){
-		return companyRepository.findAll();
+		List<Company> companies = companyRepository.findAll();
+		logger.info("Found {} companies" , companies.size());
+		return companies;
 	}
 	
 	@RequestMapping(value="/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
